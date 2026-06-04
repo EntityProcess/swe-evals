@@ -1,0 +1,148 @@
+name: swe-evals-dayjs-v1
+description: >-
+  Public demo harness for three frozen Multi-SWE-bench Day.js tasks. Each
+  runtime variant starts from the same task previous_commit with the benchmark
+  test_patch applied before the agent starts.
+version: "1.0"
+tags: [public-demo, swe-evals, dayjs, coding-agent]
+
+workspace:
+  template: ../workspace-template
+  hooks:
+    before_each:
+      command: ["bun", "../scripts/setup-dayjs-task.ts"]
+      timeout_ms: 900000
+
+execution:
+  workers: 1
+  targets:
+    - name: baseline
+      use_target: ${{ AGENT_TARGET }}
+      hooks:
+        before_each:
+          command: ["bun", "../scripts/setup-variant.ts", "baseline"]
+          timeout_ms: 10000
+
+    - name: compound-engineering
+      use_target: ${{ AGENT_TARGET }}
+      hooks:
+        before_each:
+          command: ["bun", "../scripts/setup-variant.ts", "compound-engineering"]
+          timeout_ms: 10000
+
+    - name: superpowers
+      use_target: ${{ AGENT_TARGET }}
+      hooks:
+        before_each:
+          command: ["bun", "../scripts/setup-variant.ts", "superpowers"]
+          timeout_ms: 10000
+
+tests:
+  - id: dayjs-invalid-date-locale-override
+    metadata:
+      benchmark_instance_id: iamkun__dayjs-1470
+      repo_url: https://github.com/iamkun/dayjs
+      previous_commit: 0fdac93ff2531542301b76952be9b084b2e2dfa0
+      test_patch: ../patches/iamkun__dayjs-1470.test.patch
+      setup_command: ["npm", "install", "--no-audit", "--no-fund"]
+      focused_command: ["npx", "jest", "test/plugin/updateLocale.test.js", "--runInBand", "--coverage=false"]
+      fail_to_pass_tests:
+        - test/plugin/updateLocale.test.js
+      pass_to_pass_tests:
+        - test/plugin.test.js
+        - test/display.test.js
+        - test/locale/en.test.js
+    criteria: >-
+      Fix Day.js locale invalid-date formatting so dayjs.updateLocale can set
+      invalidDate and invalid dates format with the active locale string.
+    input: |-
+      Fix the Day.js bug in repo/.
+
+      Problem: dayjs.updateLocale can set invalidDate in locale data, but
+      formatting invalid dates still returns the hard-coded Invalid Date string.
+
+      Expected fix: Make Dayjs.format use the active locale invalidDate string
+      when the date is invalid, falling back to the default constant.
+
+      Validate with:
+      npx jest test/plugin/updateLocale.test.js --runInBand --coverage=false
+    assertions:
+      - name: focused-jest
+        type: code-grader
+        command: ["bun", "../scripts/grade-dayjs-task.ts"]
+        focused_command: ["npx", "jest", "test/plugin/updateLocale.test.js", "--runInBand", "--coverage=false"]
+        expected_changed_files:
+          - src/constant.js
+          - src/index.js
+
+  - id: dayjs-year-format-leading-zeroes
+    metadata:
+      benchmark_instance_id: iamkun__dayjs-2231
+      repo_url: https://github.com/iamkun/dayjs
+      previous_commit: e70bee7f840c89ec523b9ac997e5ac621a522726
+      test_patch: ../patches/iamkun__dayjs-2231.test.patch
+      setup_command: ["npm", "install", "--no-audit", "--no-fund"]
+      focused_command: ["npx", "jest", "test/display.test.js", "--runInBand", "--coverage=false"]
+      fail_to_pass_tests:
+        - test/display.test.js
+      pass_to_pass_tests:
+        - test/parse.test.js
+        - test/query.test.js
+        - test/plugin/customParseFormat.test.js
+    criteria: >-
+      Fix Day.js YYYY formatting for years below 1000 so it pads to four
+      digits, matching Moment behavior.
+    input: |-
+      Fix the Day.js bug in repo/.
+
+      Problem: Formatting years below 1000 with YYYY omits leading zeroes,
+      producing values such as 1 instead of 0001.
+
+      Expected fix: Pad the YYYY formatter output to four digits for years
+      below 1000.
+
+      Validate with:
+      npx jest test/display.test.js --runInBand --coverage=false
+    assertions:
+      - name: focused-jest
+        type: code-grader
+        command: ["bun", "../scripts/grade-dayjs-task.ts"]
+        focused_command: ["npx", "jest", "test/display.test.js", "--runInBand", "--coverage=false"]
+        expected_changed_files:
+          - src/index.js
+
+  - id: dayjs-object-support-null-invalid-date
+    metadata:
+      benchmark_instance_id: iamkun__dayjs-2175
+      repo_url: https://github.com/iamkun/dayjs
+      previous_commit: e4468a46de423e7590f045a9e0f4b4a7251298e0
+      test_patch: ../patches/iamkun__dayjs-2175.test.patch
+      setup_command: ["npm", "install", "--no-audit", "--no-fund"]
+      focused_command: ["npx", "jest", "test/plugin/objectSupport.test.js", "--runInBand", "--coverage=false"]
+      fail_to_pass_tests:
+        - test/plugin/objectSupport.test.js
+      pass_to_pass_tests:
+        - test/plugin/customParseFormat.test.js
+        - test/plugin/duration.test.js
+        - test/plugin/utc.test.js
+    criteria: >-
+      Fix Day.js objectSupport null input handling so dayjs(null) returns an
+      invalid Day.js object instead of throwing.
+    input: |-
+      Fix the Day.js bug in repo/.
+
+      Problem: With objectSupport enabled, dayjs(null) throws while parsing
+      instead of returning an invalid Day.js object.
+
+      Expected fix: Guard the objectSupport parser against null input so
+      invalid date handling remains consistent.
+
+      Validate with:
+      npx jest test/plugin/objectSupport.test.js --runInBand --coverage=false
+    assertions:
+      - name: focused-jest
+        type: code-grader
+        command: ["bun", "../scripts/grade-dayjs-task.ts"]
+        focused_command: ["npx", "jest", "test/plugin/objectSupport.test.js", "--runInBand", "--coverage=false"]
+        expected_changed_files:
+          - src/plugin/objectSupport/index.js

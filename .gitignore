@@ -1,0 +1,5 @@
+.env
+.agentv/cache.json
+.agentv/results/
+node_modules/
+

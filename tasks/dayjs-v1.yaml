@@ -1,0 +1,153 @@
+schema_version: 1
+pack_id: dayjs-v1
+pack_title: Day.js Multi-SWE-bench v1
+status: frozen_for_harness
+frozen_at: "2026-06-04"
+selection_owner_bead: agentv-public-demo-swe-task-pack-83h
+
+source_selection:
+  selected_source: Multi-SWE-bench Day.js task rows
+  selected_dataset_url: https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench
+  selected_dataset_file: js/iamkun__dayjs_dataset.jsonl
+  canonical_schema_reference: https://huggingface.co/datasets/SWE-bench/SWE-bench
+  drift_method_reference: Marginlab-style repeated curated task pack
+  rationale:
+    - Day.js is public, small, recognizable, and JavaScript-based.
+    - The selected rows include previous commits, public issue statements, test patches, and fail-to-pass signals.
+    - Focused Jest test files keep demo validation cheap while still exercising real bug-fix behavior.
+    - A single repo family reduces harness setup variables for the first public Codex-vs-Pi comparison.
+
+shared_repo:
+  owner: iamkun
+  name: dayjs
+  repo_url: https://github.com/iamkun/dayjs
+  default_branch_at_source: dev
+  setup_command: npm install --no-audit --no-fund
+  lockfile_note: npm ci is not valid for at least the validated 2021 base commit because no package-lock.json exists.
+
+tasks:
+  - id: dayjs-invalid-date-locale-override
+    benchmark_instance_id: iamkun__dayjs-1470
+    source:
+      dataset_url: https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench
+      dataset_file: js/iamkun__dayjs_dataset.jsonl
+      pull_request_url: https://github.com/iamkun/dayjs/pull/1470
+      issue_url: https://github.com/iamkun/dayjs/issues/1465
+    repo_url: https://github.com/iamkun/dayjs
+    previous_commit: 0fdac93ff2531542301b76952be9b084b2e2dfa0
+    problem_statement: dayjs.updateLocale can set invalidDate in locale data, but formatting invalid dates still returns the hard-coded Invalid Date string.
+    expected_fix_summary: Make Dayjs.format use the active locale invalidDate string when the date is invalid, falling back to the default constant.
+    verification:
+      test_patch_source: Multi-SWE-bench test_patch for iamkun__dayjs-1470
+      focused_command: npx jest test/plugin/updateLocale.test.js --runInBand --coverage=false
+      fail_to_pass_tests:
+        - test/plugin/updateLocale.test.js
+      pass_to_pass_tests:
+        - test/plugin.test.js
+        - test/display.test.js
+        - test/locale/en.test.js
+      expected_red: The benchmark-added updateLocale invalid-date test fails on the previous commit.
+      expected_green: The focused test file passes after a correct fix.
+    selection_rationale: Clear public issue, tiny source patch, focused Jest test, and manually validated red/green behavior.
+    validation_evidence:
+      validated_at: "2026-06-04"
+      checkout_command: git fetch --depth 1 origin 0fdac93ff2531542301b76952be9b084b2e2dfa0 && git checkout 0fdac93ff2531542301b76952be9b084b2e2dfa0
+      install_command: npm install --no-audit --no-fund
+      red_result: "FAIL test/plugin/updateLocale.test.js: expected bad date, received Invalid Date"
+      green_result: "PASS test/plugin/updateLocale.test.js: 5 tests passed after applying the benchmark fix patch"
+
+  - id: dayjs-year-format-leading-zeroes
+    benchmark_instance_id: iamkun__dayjs-2231
+    source:
+      dataset_url: https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench
+      dataset_file: js/iamkun__dayjs_dataset.jsonl
+      pull_request_url: https://github.com/iamkun/dayjs/pull/2231
+      issue_url: https://github.com/iamkun/dayjs/issues/2230
+    repo_url: https://github.com/iamkun/dayjs
+    previous_commit: e70bee7f840c89ec523b9ac997e5ac621a522726
+    problem_statement: Formatting years below 1000 with YYYY omits leading zeroes, producing values such as 1-01-01 instead of 0001-01-01.
+    expected_fix_summary: Pad the YYYY formatter output to four digits for years below 1000.
+    verification:
+      test_patch_source: Multi-SWE-bench test_patch for iamkun__dayjs-2231
+      focused_command: npx jest test/display.test.js --runInBand --coverage=false
+      fail_to_pass_tests:
+        - test/display.test.js
+      pass_to_pass_tests:
+        - test/parse.test.js
+        - test/query.test.js
+        - test/plugin/customParseFormat.test.js
+      expected_red: The benchmark-added display test fails on the previous commit.
+      expected_green: The focused display test passes after a correct fix.
+    selection_rationale: Plain user-visible formatting bug, one focused test file, and low conceptual overhead for demo observers.
+
+  - id: dayjs-object-support-null-invalid-date
+    benchmark_instance_id: iamkun__dayjs-2175
+    source:
+      dataset_url: https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench
+      dataset_file: js/iamkun__dayjs_dataset.jsonl
+      pull_request_url: https://github.com/iamkun/dayjs/pull/2175
+      issue_url: https://github.com/iamkun/dayjs/issues/2095
+    repo_url: https://github.com/iamkun/dayjs
+    previous_commit: e4468a46de423e7590f045a9e0f4b4a7251298e0
+    problem_statement: With objectSupport enabled, dayjs(null) throws while parsing instead of returning an invalid Day.js object.
+    expected_fix_summary: Guard the objectSupport parser against null input so invalid date handling remains consistent.
+    verification:
+      test_patch_source: Multi-SWE-bench test_patch for iamkun__dayjs-2175
+      focused_command: npx jest test/plugin/objectSupport.test.js --runInBand --coverage=false
+      fail_to_pass_tests:
+        - test/plugin/objectSupport.test.js
+      pass_to_pass_tests:
+        - test/plugin/customParseFormat.test.js
+        - test/plugin/duration.test.js
+        - test/plugin/utc.test.js
+      expected_red: The benchmark-added objectSupport null-input test fails on the previous commit.
+      expected_green: The focused objectSupport test passes after a correct fix.
+    selection_rationale: Plugin-specific bug with a focused test file; complements the date-format and locale tasks without adding another repository setup.
+
+candidate_survey:
+  surveyed_sources:
+    - name: SWE-bench
+      url: https://huggingface.co/datasets/SWE-bench/SWE-bench
+      decision: rejected_for_v1_task_pack
+      reason: Canonical schema reference, but initial public demo should avoid Python/Docker-heavy setup until the lightweight harness path is proven.
+    - name: Multi-SWE-bench
+      url: https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench
+      decision: selected
+      reason: Contains JavaScript and TypeScript repositories with previous commits, public issue context, test patches, and fail-to-pass signals.
+    - name: SWE-bench Multilingual
+      url: https://huggingface.co/datasets/SWE-bench/SWE-bench_Multilingual
+      decision: reference_only_for_v1
+      reason: Useful cross-language precedent, but not needed for the first low-cost JavaScript pack.
+    - name: Marginlab-style drift tracking
+      decision: methodology_selected
+      reason: Inspires repeated runs over the same small curated pack; not used as a source of task rows.
+  rejected_repositories:
+    - repo: expressjs/express
+      source_file: js/expressjs__express_dataset.jsonl
+      reason: Only four Multi-SWE-bench rows and version-specific install/test behavior still needs validation.
+    - repo: axios/axios
+      source_file: js/axios__axios_dataset.jsonl
+      reason: Public and recognizable, but HTTP/client test setup needs more review than Day.js for the first handoff.
+    - repo: darkreader/darkreader
+      source_file: ts/darkreader__darkreader_dataset.jsonl
+      reason: Small TypeScript source file, but likely browser/build tooling friction and fewer task rows.
+    - repo: sveltejs/svelte
+      source_file: js/sveltejs__svelte_dataset.jsonl
+      reason: Dataset file and likely install/test cost are too large for v1 demo goals.
+    - repo: vuejs/core
+      source_file: ts/vuejs__core_dataset.jsonl
+      reason: Large TypeScript setup; defer until the harness proves cheap JS tasks.
+    - repo: mui/material-ui
+      source_file: ts/mui__material-ui_dataset.jsonl
+      reason: Very large dataset and dependency footprint; out of scope for v1.
+
+harness_handoff:
+  next_bead: agentv-public-demo-swe-harness-9fk
+  instructions:
+    - Build the AgentV harness around this metadata without changing selected tasks unless validation fails.
+    - Use a disposable checkout per task at previous_commit.
+    - Apply the Multi-SWE-bench test_patch before running the focused command.
+    - Use the focused fail-to-pass command as the first grader signal; add broader pass-to-pass checks only if runtime remains demo-friendly.
+    - Keep baseline, compound-engineering, and superpowers variants on the same previous_commit for each task.
+    - Keep provider and result-sync credentials out of repo files and out of subprocess environments unless explicitly required.
+    - If AgentV cannot express this task metadata or workspace lifecycle with existing primitives, create a focused follow-up Bead instead of expanding harness scope.

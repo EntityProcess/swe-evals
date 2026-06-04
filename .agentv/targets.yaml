@@ -1,0 +1,41 @@
+targets:
+  - name: default
+    use_target: ${{ AGENT_TARGET }}
+
+  - name: agent
+    use_target: ${{ AGENT_TARGET }}
+
+  - name: grader
+    use_target: ${{ GRADER_TARGET }}
+
+  - name: codex
+    provider: codex
+    executable: ${{ CODEX_EXECUTABLE }}
+    model: ${{ CODEX_MODEL }}
+    model_reasoning_effort: ${{ CODEX_REASONING_EFFORT }}
+    grader_target: grader
+    log_dir: .agentv/logs/codex
+    stream_log: raw
+
+  - name: pi
+    provider: pi-cli
+    subprovider: openrouter
+    model: ${{ OPENROUTER_MODEL }}
+    api_key: ${{ OPENROUTER_API_KEY }}
+    grader_target: grader
+
+  - name: pi-sdk
+    provider: pi-coding-agent
+    subprovider: openrouter
+    model: ${{ OPENROUTER_MODEL }}
+    api_key: ${{ OPENROUTER_API_KEY }}
+    grader_target: grader
+    tools: read,bash,edit,write
+    log_format: json
+
+  - name: azure
+    provider: azure
+    endpoint: ${{ AZURE_OPENAI_ENDPOINT }}
+    api_key: ${{ AZURE_OPENAI_API_KEY }}
+    model: ${{ AZURE_DEPLOYMENT_NAME }}
+    version: ${{ AZURE_OPENAI_API_VERSION }}
