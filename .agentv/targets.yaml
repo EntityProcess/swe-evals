@@ -34,8 +34,8 @@ targets:
     log_format: json
 
   - name: azure
-    provider: azure
-    endpoint: ${{ AZURE_OPENAI_ENDPOINT }}
+    provider: openai
+    base_url: ${{ AZURE_OPENAI_RESPONSES_BASE_URL }}
     api_key: ${{ AZURE_OPENAI_API_KEY }}
     model: ${{ AZURE_DEPLOYMENT_NAME }}
-    version: ${{ AZURE_OPENAI_API_VERSION }}
+    api_format: responses
