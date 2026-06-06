@@ -4,6 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"metadata:check": "bun scripts/check-dayjs-metadata-drift.ts",
 		"typecheck": "tsc --noEmit --skipLibCheck --allowImportingTsExtensions --moduleResolution bundler --module esnext --target es2022 --types bun agentv.config.ts scripts/*.ts",
 		"lint": "biome check .",
 		"eval:dry-run": "AGENT_TARGET=codex GRADER_TARGET=azure bun ../agentv/apps/cli/src/cli.ts eval evals/dayjs-v1.eval.yaml --dry-run --threshold 0"

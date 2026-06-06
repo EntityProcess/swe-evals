@@ -59,6 +59,34 @@ AGENT_TARGET=codex GRADER_TARGET=azure \
 not edit Day.js, while the deterministic code grader still runs the focused
 Jest command against the prepared red state.
 
+## Metadata Source of Truth
+
+`tasks/dayjs-v1.yaml` is the frozen provenance and source-selection record. It
+records the selected Day.js rows, their upstream commits, source rationale,
+validation evidence, focused commands, and fail-to-pass/pass-to-pass signals.
+Treat it as the source of truth for selected task metadata.
+
+`evals/dayjs-v1.eval.yaml` is the executable AgentV surface. It repeats the
+metadata that AgentV passes to setup and grading hooks, but it should not become
+a second source of truth. Run the drift check after editing either YAML file:
+
+```bash
+cd swe-evals
+bun run metadata:check
+```
+
+The check verifies every eval test against the frozen task pack for
+`repo_url`, `previous_commit`, `test_patch`, `setup_command`,
+`focused_command`, `fail_to_pass_tests`, and `pass_to_pass_tests`. The
+`test_patch` value is derived from each frozen `benchmark_instance_id` using the
+`../patches/<benchmark_instance_id>.test.patch` convention.
+
+Fields such as source-selection rationale, problem statements, expected fix
+summaries, validation evidence, and candidate survey notes are informational
+provenance. Eval-only fields such as `criteria`, `input`, target aliases, hook
+timeouts, and `expected_changed_files` describe the AgentV execution surface and
+are not part of the frozen source-selection drift contract.
+
 ## Secrets Boundary
 
 The repository does not contain provider secrets, result-sync credentials, or
